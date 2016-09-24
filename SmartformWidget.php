@@ -5,9 +5,9 @@ use yii\base\Widget;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-require('DatetimepickerAsset.php');
-require('TimepickerAsset.php');
-require('FileinputAsset.php');
+require_once('DatetimepickerAsset.php');
+require_once('TimepickerAsset.php');
+require_once('FileinputAsset.php');
 
 /**
  	SmartformWidget
