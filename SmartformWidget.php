@@ -241,7 +241,7 @@ class SmartformWidget extends Widget {
 			//$this->prepareAssetsForDatepicker();
 			$view->registerJs("
 				$('#datepicker-{$_id}').datetimepicker({ 
-					  locale: 'es' 
+					  locale: 'es'
 					, format: '{$data['format']}' 
 				});
 			",\yii\web\View::POS_LOAD);
@@ -260,9 +260,10 @@ class SmartformWidget extends Widget {
 				<div class='help-block $err_class'>$err</div>
 				</div>
 			";
-			$view->registerJs("
-				$('#{$_id}').timepicker();
-			",\yii\web\View::POS_LOAD);
+			$options = isset($data['options']) ? 
+				json_encode($data['options']) : "";
+			$view->registerJs("$('#{$_id}').timepicker($options);
+				",\yii\web\View::POS_LOAD);
 		}
 		if('upload_file'==$data['type']){
 			\app\assets\FileinputAsset::register($view);
