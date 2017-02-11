@@ -60,90 +60,100 @@ Sometimes a callback is required to get values from it.
 
 ```
 
-## Callback Example: File Uploader
+# How to Upload a File
 
-Smartform contain a special field type called: 'upload_file', used to implement
-a smart file uploader, it requires some help via callback to get it work:
+1. in your config file define a field named "product_image" in this way:		
 
 ```
-[php]
+"product_image"=>"upload_one_picture", 
+```
 
-function file_uploader_callback($_call, $_model, $_field_name){
-	if('after_label'==$_call){
-		if('some_field_name'==$_field_name){
-			return "<p>Please upload a PNG picture</p>";
-		}
-	}
-	if('get_file_upload_url'==$_call){
-		// the URL that will receive the $_FILES post.
-		//
-		return Url::toRoute(['some_ajax_based_action']);
-	}
-	if('instance_files'==$_call){
-		if('some_field_name'==$_field_name){
-			// see the next code snippet (below this lines) 
-			//
-			if($objects = \Yii::$app->mymediamanager->enumGraphics(
-				$_model->some_instance, $_field_name)){
-				foreach($objects as &$item)	
-					$item['delete_url'] = 
-						Url::toRoute(['ajaxremove','d'=>$item['id']]);
+2. in the widget definition, add a inline callback. this is used to tell
+the widget where to put the $_POST and $_FILES.
+
+```
+		echo \app\components\SmartformWidget::widget([
+			'config_entry'=>'field-groups',
+			'form_id'=>'some-form-id',
+			'active_form'=>$form,
+			'model'=>$model,
+			'callback' => function($_call,$_model,$_fieldname){
+				
+				if('get_file_upload_url'==$_call){
+					return \yii\helpers\Url::toRoute(['ajax-upload-product-image']);
+				}
+
+				if('instance_files' == $_call){
+					$list = [];
+					if('product_image'==$_fieldname) $list[] = [
+						'id'=>1, 'file_name'=>'', 'file_path'=>'',
+						'preview_url'=>'/media/landingpage/product/thumb/'.$_model->id,
+						'delete_url'=>'',
+					];
+					return $list;
+				}
 			}
-			return $media;
-		}
+		]);
+```
+
+3. the controller which will receive the $_POST and $_FILES should declare
+a action and some exceptions to CSRF:
+
+```
+	// methods required in the controller:
+
+	public function beforeAction($action) {            
+		if($action->id == 'ajax-upload-product-image') 
+			$this->enableCsrfValidation = false;
+		return parent::beforeAction($action);
 	}
-   
- }
-
- // the enumGraphics exposed by mymediamanager:
-
-	public function enumGraphics($parent,$usage){
-		$list = [];
-		if($all = \app\models\Media::all($parent)){
-			foreach($all as $media){
-				if($media->usage != $usage) continue;
-				$hash = base64_encode(json_encode(
-					[$parent,$usage,$media->codigo]));
-				$list[] = [
-					"id"=>$media->id,
-					"file_name"=>$media->file_name_only,
-					"file_path"=>$media->long_file_local_path,
-					"preview_url"=>
-						Url::toRoute(['/media/preview','f'=>$hash]),
-					"delete_url"=>[], // should be defined by the caller
-				];
-			}
-		}
-		return $list;
+	
+	public function actionAjaxUploadProductImage(){
+		if(!Yii::$app->request->isAjax) die('invalid ajax request');
+		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+		
+		$model_id=filter_input(INPUT_POST,"model_id",FILTER_SANITIZE_STRING);
+		
+		// this will help you to get more information:
+		Yii::info("UPLOAD_INFO\n", print_r(["POST"=>$_POST,"FILES"=>$_FILES],true));
+		
+		$model = $this->findModel($model_id);
+		$tmp_file = $_FILES['Landingpage']['tmp_name']['product_image'];	
+		$binary_data = file_get_contents($tmp_file);
+		
+		return [];
 	}
+```
 
-// The POSTED $_FILES and $_POST will look like this:
+4. only for your information, the LOG injected into the action will tell you something
+like the following, so use this information in order to get your file:
 
-		[FILES] => Array(
-			[SomeModelName] => Array (
-				[name] => Array(
-					[some_field_name] => somepicture.jpg
-				)
-				[type] => Array(
-					[some_field_name] => image/jpeg
-				)
-				[tmp_name] => Array(
-					[some_field_name] => /tmp/php1298s1ff1
-				)
-				[error] => Array(
-					[some_field_name] => 0
-				)
-				[size] => Array(
-					[some_field_name] => 23654
-				)
-			)
-		)
-		[POST] => Array(
-				[file_id] => 0
-				[model_id] => 'SOME UNIQUE ID'
-				[field_name] => some_field_name
-			)
+```
+$_POST = [
+    'file_id' => '0'
+    'model_id' => '1'
+    'field_name' => 'product_image'
+]
+$_FILES = [
+    'Landingpage' => [
+        'name' => [
+            'product_image' => 'foto_1_verde.jpg'
+        ]
+        'type' => [
+            'product_image' => 'image/jpeg'
+        ]
+        'tmp_name' => [
+            'product_image' => '/tmp/phppQhABh'
+        ]
+        'error' => [
+            'product_image' => 0
+        ]
+        'size' => [
+            'product_image' => 2597
+        ]
+    ]
+]
+```
 
- ```
 
 
