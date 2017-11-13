@@ -238,13 +238,29 @@ class SmartformWidget extends Widget {
 				<div class='help-block $err_class'>$err</div>
 				</div>
 			";
-			//$this->prepareAssetsForDatepicker();
 			$view->registerJs("
-				$('#datepicker-{$_id}').datetimepicker({ 
-					  locale: 'es'
-					, format: '{$data['format']}' 
+
+                $.fn.datepicker.dates['es'] = {
+                    days: ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves','Viernes', 'Sabado'],
+                    daysShort: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
+                    daysMin: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'],
+                    months: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Deciembre'],
+                    monthsShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                    today: 'Hoy',
+                    clear: 'Limpia',
+                    format: 'dd/mm/yyyy',
+                    titleFormat: 'MM yyyy',
+                    weekStart: 0
+                };
+                
+                $('#datepicker-{$_id}').datepicker({ 
+					  format: '{$data['format']}'
+                    , language: 'es'
+                    , autoclose: true
+                    , orientation: 'auto'
+                    , zIndexOffset: 10000
 				});
-			",\yii\web\View::POS_LOAD);
+			");
 		}
 		if('timepicker'==$data['type']){
 			\app\assets\TimepickerAsset::register($view);
@@ -262,8 +278,7 @@ class SmartformWidget extends Widget {
 			";
 			$options = isset($data['options']) ? 
 				json_encode($data['options']) : "";
-			$view->registerJs("$('#{$_id}').timepicker($options);
-				",\yii\web\View::POS_LOAD);
+			$view->registerJs("$('#{$_id}').timepicker($options);");
 		}
 		if('upload_file'==$data['type']){
 			\app\assets\FileinputAsset::register($view);
@@ -277,7 +292,8 @@ class SmartformWidget extends Widget {
 				<div class='form-group form-group-ex'>
         		<label class='control-label'>{$label}</label>
 				{$after_label}
-       			{$input}
+       			{$input}</input>
+                
 				<div class='help-block $err_class'>$err</div>
 				</div>
         	";
@@ -304,6 +320,9 @@ class SmartformWidget extends Widget {
 			$initialPreviewConfig = json_encode($initialPreviewConfig);
 			// end preview
 			$view->registerJs("
+
+                setTimeout(function(){
+
 				$('#{$_id}').fileinput({
 					 showUpload: true
 					,showPreview: true 
@@ -328,7 +347,8 @@ class SmartformWidget extends Widget {
 					,initialPreview: $initialPreview
 					,initialPreviewConfig: $initialPreviewConfig
 				});
-				$('#{$_id}').on('filepredelete', function(jqXHR) {
+				
+                $('#{$_id}').on('filepredelete', function(jqXHR) {
 					var abort = true;
 					var resp = prompt('tipee SI para confirmar la eliminacion.');
 					if ('si'==resp || 'SI'==resp) {
@@ -336,7 +356,10 @@ class SmartformWidget extends Widget {
 					}
 					return abort;
 				});
-			",\yii\web\View::POS_LOAD);
+
+                }, 1000);
+
+			");
 		}
   return $html;
 	}

@@ -10,11 +10,13 @@ class DatetimepickerAsset extends AssetBundle
 	//public $basePath = '@webroot';
 	//public $baseUrl = '@web';
 	public $css = [
-		'bootstrap-datetimepicker.css',
+		//'bootstrap-datetimepicker.css',
+        'bootstrap-datepicker.min.css',
 	];
 	public $js = [
 		'moment.js',
-		'bootstrap-datetimepicker.js',
+		//'bootstrap-datetimepicker.js',
+        'bootstrap-datepicker.min.js',
 	];
 	public $depends = [ '\yii\web\JqueryAsset' ];
 }
